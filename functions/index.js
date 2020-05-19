@@ -105,6 +105,95 @@ api.get(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
     });
 });
 
+api.put(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
+  const secret = req.headers.key;
+  if (secret === '') {
+    return res.status(404).send({
+      error: 'no_token',
+      message: 'Please provide an access token.',
+    });
+  }
+  const body = req.body;
+  const data = body;
+
+  // let testAuthentication = client.query(
+  //   q.Let(
+  //     {
+  //       user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
+  //       userRef: q.Ref(
+  //         q.Collection('users'),
+  //         q.Select(['ref', 'id'], q.Var('user')),
+  //       ),
+  //       // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+  //       identityRef: q.Identity(),
+  //     },
+  //     {
+  //       isAllowed: q.Or(
+  //         q.Equals(q.Var('userRef'), q.Var('identityRef'))
+  //       ),
+  //     },
+  //   ),
+  //   { secret },
+  // );
+
+  let updateUser = client.query(
+    q.Let(
+      {
+        user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
+      },
+      q.Update(q.Select('ref', q.Var('user')), {
+        data,
+      }),
+    ),
+
+    { secret },
+  );
+
+  // testAuthentication
+  //   .then((response) => {
+  //     if (response.isAllowed) {
+  updateUser
+    .then((responseTwo) => {
+      return res.status(200).send(responseTwo);
+    })
+    // .catch((errorTwo) => {
+    //   return res.status(300).send(errorTwo);
+    // });
+    //   } else {
+    //     return res.status(403).send({
+    //       error: 'permission_denied',
+    //       message:
+    //         "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+    //     });
+    //   }
+    // })
+    .catch((error) => {
+      if (error.name === 'PermissionDenied') {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      } else if (error.name === 'NotFound') {
+        return res.status(404).send({
+          error: 'not_found',
+          message: `No site exists with the id ${req.params.id}.`,
+        });
+      } else if (error.name === 'Unauthorized') {
+        return res.status(404).send({
+          error: 'unauthorized',
+          message: `The token you provided is invalid.`,
+        });
+      } else {
+        return res.status(500).send({
+          error: 'server_error',
+          data: error,
+          message: `We encountered an unidentified error.`,
+        });
+      }
+    });
+});
+
 /////////////////////////
 //   SITE API ROUTES   //
 /////////////////////////
