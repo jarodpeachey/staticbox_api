@@ -30,7 +30,76 @@ api.get(['/api/v1', '/api/v1/'], (req, res) => {
     .send(`<img src="https://media.giphy.com/media/hhkflHMiOKqI/source.gif">`);
 });
 
-api.get(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
+api.get(['/api/v1/sites', '/api/v1/sites/'], (req, res) => {
+  console.log(req.headers);
+  const secret = req.headers.key;
+
+  // let testAuthentication = client.query(
+  //   q.Let(
+  //     {
+  //       site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
+  //       userRef: q.Select(['data', 'user'], q.Var('site')),
+  //       siteRef: q.Ref(q.Collection('sites'), q.Select(['ref', 'id'], q.Var('site'))),
+  //       // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+  //       identityRef: q.Identity(),
+  //     },
+  //     {
+  //       isAllowed: q.Or(
+  //         q.Equals(q.Var('userRef'), q.Var('identityRef')),
+  //         q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+  //       ),
+  //     },
+  //   ),
+  //   { secret },
+  // );
+
+  let getSites = client.query(
+    q.Map(
+      q.Paginate(q.Match(q.Index('all_sites'))),
+      q.Lambda(
+        'sitesRef',
+        q.Let(
+          {
+            sites: q.Get(q.Var('sitesRef')),
+            user: q.Get(q.Select(['data', 'user'], q.Var('sites'))),
+          },
+          {
+            user: q.Select(['ref'], q.Var('user')),
+            site: q.Var('sites'),
+          },
+        ),
+      ),
+    ),
+    { secret },
+  );
+
+  getSites
+    .then((responseTwo) => {
+      return res.status(200).send(responseTwo);
+    })
+    .catch((error) => {
+      if (error.name === 'PermissionDenied') {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      } else if (error.name === 'NotFound') {
+        return res.status(404).send({
+          error: 'not_found',
+          message: `No site exists with the id ${req.params.id}.`,
+        });
+      } else {
+        return res.status(500).send({
+          error: 'server_error',
+          data: error,
+          message: `We encountered an unidentified error.`,
+        });
+      }
+    });
+});
+
+api.get(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
   console.log(req.headers);
   const secret = req.headers.key;
 
@@ -39,11 +108,18 @@ api.get(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
       {
         site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
         userRef: q.Select(['data', 'user'], q.Var('site')),
+        siteRef: q.Ref(
+          q.Collection('sites'),
+          q.Select(['ref', 'id'], q.Var('site')),
+        ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
       },
       {
-        isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
+        isAllowed: q.Or(
+          q.Equals(q.Var('userRef'), q.Var('identityRef')),
+          q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+        ),
       },
     ),
     { secret },
@@ -64,6 +140,12 @@ api.get(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
           .catch((errorTwo) => {
             return res.status(300).send(errorTwo);
           });
+      } else {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+        });
       }
     })
     .catch((error) => {
@@ -71,7 +153,7 @@ api.get(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
         return res.status(403).send({
           error: 'permission_denied',
           message:
-            "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
+            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
         });
       } else if (error.name === 'NotFound') {
         return res.status(404).send({
@@ -81,13 +163,14 @@ api.get(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
       } else {
         return res.status(500).send({
           error: 'server_error',
+          data: error,
           message: `We encountered an unidentified error.`,
         });
       }
     });
 });
 
-api.put(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
+api.put(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
   console.log(req.headers);
   const secret = req.headers.key;
   const body = req.body;
@@ -106,11 +189,18 @@ api.put(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
       {
         site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
         userRef: q.Select(['data', 'user'], q.Var('site')),
+        siteRef: q.Ref(
+          q.Collection('sites'),
+          q.Select(['ref', 'id'], q.Var('site')),
+        ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
       },
       {
-        isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
+        isAllowed: q.Or(
+          q.Equals(q.Var('userRef'), q.Var('identityRef')),
+          q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+        ),
       },
     ),
     { secret },
@@ -146,6 +236,12 @@ api.put(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
           .catch((errorTwo) => {
             return res.status(300).send(errorTwo);
           });
+      } else {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+        });
       }
     })
     .catch((error) => {
@@ -153,7 +249,7 @@ api.put(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
         return res.status(403).send({
           error: 'permission_denied',
           message:
-            "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
+            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
         });
       } else if (error.name === 'NotFound') {
         return res.status(404).send({
@@ -163,13 +259,14 @@ api.put(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
       } else {
         return res.status(500).send({
           error: 'server_error',
+          data: error,
           message: `We encountered an unidentified error.`,
         });
       }
     });
 });
 
-api.delete(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
+api.delete(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
   console.log(req.headers);
   const secret = req.headers.key;
 
@@ -178,11 +275,18 @@ api.delete(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
       {
         site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
         userRef: q.Select(['data', 'user'], q.Var('site')),
+        siteRef: q.Ref(
+          q.Collection('sites'),
+          q.Select(['ref', 'id'], q.Var('site')),
+        ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
       },
       {
-        isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
+        isAllowed: q.Or(
+          q.Equals(q.Var('userRef'), q.Var('identityRef')),
+          q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+        ),
       },
     ),
     { secret },
@@ -209,6 +313,12 @@ api.delete(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
           .catch((errorTwo) => {
             return res.status(300).send(errorTwo);
           });
+      } else {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+        });
       }
     })
     .catch((error) => {
@@ -216,7 +326,7 @@ api.delete(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
         return res.status(403).send({
           error: 'permission_denied',
           message:
-            "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
+            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
         });
       } else if (error.name === 'NotFound') {
         return res.status(404).send({
@@ -226,6 +336,7 @@ api.delete(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
       } else {
         return res.status(500).send({
           error: 'server_error',
+          data: error,
           message: `We encountered an unidentified error.`,
         });
       }
