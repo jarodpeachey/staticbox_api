@@ -31,28 +31,13 @@ api.get(['/api/v1', '/api/v1/'], (req, res) => {
 });
 
 api.get(['/api/v1/sites', '/api/v1/sites/'], (req, res) => {
-  console.log(req.headers);
   const secret = req.headers.key;
-
-  // let testAuthentication = client.query(
-  //   q.Let(
-  //     {
-  //       site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
-  //       userRef: q.Select(['data', 'user'], q.Var('site')),
-  //       siteRef: q.Ref(q.Collection('sites'), q.Select(['ref', 'id'], q.Var('site'))),
-  //       // userRef: q.Ref(q.Collection('users'), q.Var('user')),
-  //       identityRef: q.Identity(),
-  //     },
-  //     {
-  //       isAllowed: q.Or(
-  //         q.Equals(q.Var('userRef'), q.Var('identityRef')),
-  //         q.Equals(q.Var('siteRef'), q.Var('identityRef')),
-  //       ),
-  //     },
-  //   ),
-  //   { secret },
-  // );
-
+  if (secret === '') {
+    return res.status(404).send({
+      error: 'no_token',
+      message: 'Please provide an access token.',
+    });
+  }
   let getSites = client.query(
     q.Map(
       q.Paginate(q.Match(q.Index('all_sites'))),
@@ -89,6 +74,11 @@ api.get(['/api/v1/sites', '/api/v1/sites/'], (req, res) => {
           error: 'not_found',
           message: `No site exists with the id ${req.params.id}.`,
         });
+      } else if (error.name === 'Unauthorized') {
+        return res.status(404).send({
+          error: 'unauthorized',
+          message: `The token you provided is invalid.`,
+        });
       } else {
         return res.status(500).send({
           error: 'server_error',
@@ -100,9 +90,13 @@ api.get(['/api/v1/sites', '/api/v1/sites/'], (req, res) => {
 });
 
 api.get(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
-  console.log(req.headers);
   const secret = req.headers.key;
-
+  if (secret === '') {
+    return res.status(404).send({
+      error: 'no_token',
+      message: 'Please provide an access token.',
+    });
+  }
   let testAuthentication = client.query(
     q.Let(
       {
@@ -160,6 +154,11 @@ api.get(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
           error: 'not_found',
           message: `No site exists with the id ${req.params.id}.`,
         });
+      } else if (error.name === 'Unauthorized') {
+        return res.status(404).send({
+          error: 'unauthorized',
+          message: `The token you provided is invalid.`,
+        });
       } else {
         return res.status(500).send({
           error: 'server_error',
@@ -171,8 +170,13 @@ api.get(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
 });
 
 api.put(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
-  console.log(req.headers);
   const secret = req.headers.key;
+  if (secret === '') {
+    return res.status(404).send({
+      error: 'no_token',
+      message: 'Please provide an access token.',
+    });
+  }
   const body = req.body;
   const data = body;
 
@@ -256,6 +260,11 @@ api.put(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
           error: 'not_found',
           message: `No site exists with the id ${req.params.id}.`,
         });
+      } else if (error.name === 'Unauthorized') {
+        return res.status(404).send({
+          error: 'unauthorized',
+          message: `The token you provided is invalid.`,
+        });
       } else {
         return res.status(500).send({
           error: 'server_error',
@@ -267,9 +276,13 @@ api.put(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
 });
 
 api.delete(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
-  console.log(req.headers);
   const secret = req.headers.key;
-
+  if (secret === '') {
+    return res.status(404).send({
+      error: 'no_token',
+      message: 'Please provide an access token.',
+    });
+  }
   let testAuthentication = client.query(
     q.Let(
       {
@@ -332,6 +345,11 @@ api.delete(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
         return res.status(404).send({
           error: 'not_found',
           message: `No site exists with the id ${req.params.id}.`,
+        });
+      } else if (error.name === 'Unauthorized') {
+        return res.status(404).send({
+          error: 'unauthorized',
+          message: `The token you provided is invalid.`,
         });
       } else {
         return res.status(500).send({
