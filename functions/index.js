@@ -59,24 +59,24 @@ api.get(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
     { secret },
   );
 
-  testAuthentication
-    .then((response) => {
-      if (response.isAllowed) {
+  // testAuthentication
+  //   .then((response) => {
+  //     if (response.isAllowed) {
         getUser
           .then((responseTwo) => {
             return res.status(200).send(responseTwo);
           })
-          .catch((errorTwo) => {
-            return res.status(300).send(errorTwo);
-          });
-      } else {
-        return res.status(403).send({
-          error: 'permission_denied',
-          message:
-            "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
-        });
-      }
-    })
+    //       .catch((errorTwo) => {
+    //         return res.status(300).send(errorTwo);
+    //       });
+    //   } else {
+    //     return res.status(403).send({
+    //       error: 'permission_denied',
+    //       message:
+    //         "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
+    //     });
+    //   }
+    // })
     .catch((error) => {
       if (error.name === 'PermissionDenied') {
         return res.status(403).send({
