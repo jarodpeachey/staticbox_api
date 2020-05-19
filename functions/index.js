@@ -67,7 +67,23 @@ api.get(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
       }
     })
     .catch((error) => {
-      return res.status(300).send(error);
+      if (error.name === 'PermissionDenied') {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      } else if (error.name === 'NotFound') {
+        return res.status(404).send({
+          error: 'not_found',
+          message: `No site exists with the id ${req.params.id}.`,
+        });
+      } else {
+        return res.status(500).send({
+          error: 'server_error',
+          message: `We encountered an unidentified error.`,
+        });
+      }
     });
 });
 
@@ -104,11 +120,15 @@ api.put(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
     q.Let(
       {
         site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
-        userRef: q.Select(['data', 'user'], q.Var('site')),
-        // userRef: q.Ref(q.Collection('users'), q.Var('user')),
-        identityRef: q.Identity(),
       },
       q.Update(q.Select('ref', q.Var('site')), {
+        credentials: {
+          password: data.name
+            .toLowerCase()
+            .replace(/ /g, '-')
+            .replace(/\'/g, '')
+            .replace(/\,/g, '-'),
+        },
         data,
       }),
     ),
@@ -129,7 +149,86 @@ api.put(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
       }
     })
     .catch((error) => {
-      return res.status(300).send(error);
+      if (error.name === 'PermissionDenied') {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      } else if (error.name === 'NotFound') {
+        return res.status(404).send({
+          error: 'not_found',
+          message: `No site exists with the id ${req.params.id}.`,
+        });
+      } else {
+        return res.status(500).send({
+          error: 'server_error',
+          message: `We encountered an unidentified error.`,
+        });
+      }
+    });
+});
+
+api.delete(['/api/v1/site/:id', '/api/v1/site/:id/'], (req, res) => {
+  console.log(req.headers);
+  const secret = req.headers.key;
+
+  let testAuthentication = client.query(
+    q.Let(
+      {
+        site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
+        userRef: q.Select(['data', 'user'], q.Var('site')),
+        // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+        identityRef: q.Identity(),
+      },
+      {
+        isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
+      },
+    ),
+    { secret },
+  );
+
+  let deleteSite = client.query(
+    q.Let(
+      {
+        site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
+      },
+      q.Delete(q.Select('ref', q.Var('site'))),
+    ),
+
+    { secret },
+  );
+
+  testAuthentication
+    .then((response) => {
+      if (response.isAllowed) {
+        deleteSite
+          .then((responseTwo) => {
+            return res.status(200).send(responseTwo);
+          })
+          .catch((errorTwo) => {
+            return res.status(300).send(errorTwo);
+          });
+      }
+    })
+    .catch((error) => {
+      if (error.name === 'PermissionDenied') {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      } else if (error.name === 'NotFound') {
+        return res.status(404).send({
+          error: 'not_found',
+          message: `No site exists with the id ${req.params.id}.`,
+        });
+      } else {
+        return res.status(500).send({
+          error: 'server_error',
+          message: `We encountered an unidentified error.`,
+        });
+      }
     });
 });
 
