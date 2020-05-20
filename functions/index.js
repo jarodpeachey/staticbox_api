@@ -62,10 +62,10 @@ api.get(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
   // testAuthentication
   //   .then((response) => {
   //     if (response.isAllowed) {
-        getUser
-          .then((responseTwo) => {
-            return res.status(200).send(responseTwo);
-          })
+  getUser
+    .then((responseTwo) => {
+      return res.status(200).send(responseTwo);
+    })
     //       .catch((errorTwo) => {
     //         return res.status(300).send(errorTwo);
     //       });
@@ -178,6 +178,88 @@ api.put(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
         return res.status(404).send({
           error: 'not_found',
           message: `No site exists with the id ${req.params.id}.`,
+        });
+      } else if (error.name === 'Unauthorized') {
+        return res.status(404).send({
+          error: 'unauthorized',
+          message: `The token you provided is invalid.`,
+        });
+      } else {
+        return res.status(500).send({
+          error: 'server_error',
+          data: error,
+          message: `We encountered an unidentified error.`,
+        });
+      }
+    });
+});
+
+api.delete(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
+  const secret = req.headers.key;
+  if (secret === '') {
+    return res.status(404).send({
+      error: 'no_token',
+      message: 'Please provide an access token.',
+    });
+  }
+  let testAuthentication = client.query(
+    q.Let(
+      {
+        user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
+        userRef: q.Ref(
+          q.Collection('users'),
+          q.Select(['ref', 'id'], q.Var('user')),
+        ),
+        // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+        identityRef: q.Identity(),
+      },
+      {
+        isAllowed: q.Or(q.Equals(q.Var('userRef'), q.Var('identityRef'))),
+      },
+    ),
+    { secret },
+  );
+
+  let deleteUser = client.query(
+    q.Let(
+      {
+        user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
+      },
+      q.Delete(q.Select('ref', q.Var('user'))),
+    ),
+
+    { secret },
+  );
+
+  // testAuthentication
+  //   .then((response) => {
+  //     if (response.isAllowed) {
+  deleteUser
+    .then((responseTwo) => {
+      return res.status(200).send(responseTwo);
+    })
+    //       .catch((errorTwo) => {
+    //         return res.status(300).send(errorTwo);
+    //       });
+    //   } else {
+    //     return res.status(403).send({
+    //       error: 'permission_denied',
+    //       message:
+    //         "You don't have permission to delete this user. If this is a mistake, please contact jarod@staticbox.io",
+    //     });
+    //   }
+    // })
+    .catch((error) => {
+      if (error.name === 'PermissionDenied') {
+        return res.status(403).send({
+          error: 'permission_denied_fauna',
+          message:
+            "You don't have permission to delete this user. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      } else if (error.name === 'NotFound') {
+        return res.status(404).send({
+          error: 'not_found',
+          message: `No user exists with the id ${req.params.id}.`,
         });
       } else if (error.name === 'Unauthorized') {
         return res.status(404).send({
@@ -528,6 +610,107 @@ api.delete(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
       }
     });
 });
+
+/////////////////////////
+//   COMMENT API ROUTES   //
+/////////////////////////
+
+api.get(
+  ['/api/v1/users/:id/comments', '/api/v1/users/:id/comments/'],
+  (req, res) => {
+    const secret = req.headers.key;
+    if (secret === '') {
+      return res.status(404).send({
+        error: 'no_token',
+        message: 'Please provide an access token.',
+      });
+    }
+    let testAuthentication = client.query(
+      q.Let(
+        {
+          user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
+          userRef: q.Select('ref', q.Var('user')),
+          // siteRef: q.Ref(
+          //   q.Collection('sites'),
+          //   q.Select(['ref', 'id'], q.Var('site')),
+          // ),
+          // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+          identityRef: q.Identity(),
+        },
+        {
+          isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
+        },
+      ),
+      { secret },
+    );
+
+    let getComments = client.query(
+      q.Map(
+        q.Paginate(q.Match(q.Index('all_comments')), { size: 1000 }),
+        q.Lambda(
+          'commentsRef',
+          q.Let(
+            {
+              comments: q.Get(q.Var('commentsRef')),
+              user: q.Get(q.Select(['data', 'user'], q.Var('comments'))),
+              site: q.Get(q.Select(['data', 'site'], q.Var('comments'))),
+            },
+            {
+              ref: q.Select(['ref'], q.Var('comments')),
+              data: q.Select(['data'], q.Var('comments')),
+            },
+          ),
+        ),
+      ),
+      { secret },
+    );
+
+    testAuthentication
+      .then((response) => {
+        if (response.isAllowed) {
+          getComments
+            .then((responseTwo) => {
+              return res.status(200).send(responseTwo);
+            })
+            .catch((errorTwo) => {
+              return res.status(300).send(errorTwo);
+            });
+        } else {
+          return res.status(403).send({
+            error: 'permission_denied',
+            message:
+              "You don't have permission to access this user's comments. If this is a mistake, please contact jarod@staticbox.io",
+          });
+        }
+      })
+      .catch((error) => {
+        if (error.name === 'PermissionDenied') {
+          return res.status(403).send({
+            error: 'permission_denied',
+            message:
+              "You don't have permission to access this user's comments. If this is a mistake, please contact jarod@staticbox.io",
+            data: error,
+          });
+        } else if (error.name === 'NotFound') {
+          return res.status(404).send({
+            error: 'not_found',
+            message: `No user exists with the id ${req.params.id}.`,
+          });
+        } else if (error.name === 'Unauthorized') {
+          return res.status(404).send({
+            error: 'unauthorized',
+            message: `The token you provided is invalid.`,
+          });
+        } else {
+          return res.status(500).send({
+            error: 'server_error',
+            data: error,
+            message: `We encountered an unidentified error.`,
+          });
+        }
+      });
+  },
+);
 
 // Export API function
 exports.api = functions.https.onRequest(api);
