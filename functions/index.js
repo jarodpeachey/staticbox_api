@@ -726,7 +726,7 @@ api.get(
       q.Let(
         {
           site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
-          userRef: q.Select(['data', 'user'], q.Var('site')),
+          userRef: q.Select(['data', 'user'], q.Get(q.Identity())),
           siteRef: q.Ref(
             q.Collection('sites'),
             q.Select(['ref', 'id'], q.Var('site')),
@@ -735,7 +735,10 @@ api.get(
           identityRef: q.Identity(),
         },
         {
-          isAllowed: q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+          isAllowed: q.Or(
+            q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+            q.Equals(q.Var('userRef'), q.Var('identityRef')),
+          ),
         },
       ),
       { secret },
@@ -749,12 +752,14 @@ api.get(
           q.Let(
             {
               comments: q.Get(q.Var('commentsRef')),
-              user: q.Select(['data', 'user'], q.Var('comments')),
-              site: q.Select(['data', 'site'], q.Var('comments')),
+              site: q.Get(q.Select(['data', 'site'], q.Var('comments'))),
+              user: q.Get(q.Select(['data', 'user'], q.Var('comments'))),
             },
             {
               ref: q.Select(['ref'], q.Var('comments')),
               data: q.Select(['data'], q.Var('comments')),
+              user: q.Select('data', q.Var('user')),
+              site: q.Select('data', q.Var('site')),
             },
           ),
         ),
@@ -792,6 +797,7 @@ api.get(
           return res.status(404).send({
             error: 'not_found',
             message: `No site exists with the id ${req.params.id}.`,
+            data: error,
           });
         } else if (error.name === 'Unauthorized') {
           return res.status(404).send({
