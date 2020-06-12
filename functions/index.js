@@ -30,7 +30,7 @@ app.get('/hello-world', (req, res) => {
   return res.status(200).send('Hello World!');
 });
 
-api.get(['/users/:id', '/users/:id/'], (req, res) => {
+api.get(['/api/users/:id', '/api/users/:id/'], (req, res) => {
   const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
@@ -52,14 +52,14 @@ api.get(['/users/:id', '/users/:id/'], (req, res) => {
       },
       {
         isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let getUser = client.query(
     q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
-    { secret },
+    { secret }
   );
 
   // testAuthentication
@@ -108,7 +108,7 @@ api.get(['/users/:id', '/users/:id/'], (req, res) => {
     });
 });
 
-api.put(['/users/:id', '/users/:id/'], (req, res) => {
+api.put(['/api/users/:id', '/api/users/:id/'], (req, res) => {
   const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
@@ -146,10 +146,10 @@ api.put(['/users/:id', '/users/:id/'], (req, res) => {
       },
       q.Update(q.Select('ref', q.Var('user')), {
         data,
-      }),
+      })
     ),
 
-    { secret },
+    { secret }
   );
 
   // testAuthentication
@@ -197,7 +197,7 @@ api.put(['/users/:id', '/users/:id/'], (req, res) => {
     });
 });
 
-api.delete(['/users/:id', '/users/:id/'], (req, res) => {
+api.delete(['/api/users/:id', '/api/users/:id/'], (req, res) => {
   const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
@@ -211,16 +211,16 @@ api.delete(['/users/:id', '/users/:id/'], (req, res) => {
         user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
         userRef: q.Ref(
           q.Collection('users'),
-          q.Select(['ref', 'id'], q.Var('user')),
+          q.Select(['ref', 'id'], q.Var('user'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
       },
       {
         isAllowed: q.Or(q.Equals(q.Var('userRef'), q.Var('identityRef'))),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let deleteUser = client.query(
@@ -228,10 +228,10 @@ api.delete(['/users/:id', '/users/:id/'], (req, res) => {
       {
         user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
       },
-      q.Delete(q.Select('ref', q.Var('user'))),
+      q.Delete(q.Select('ref', q.Var('user')))
     ),
 
-    { secret },
+    { secret }
   );
 
   // testAuthentication
@@ -283,7 +283,7 @@ api.delete(['/users/:id', '/users/:id/'], (req, res) => {
 //   SITE API ROUTES   //
 /////////////////////////
 
-api.get(['/sites', '/sites/'], (req, res) => {
+api.get(['/api/sites', '/api/sites/'], (req, res) => {
   const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
@@ -304,11 +304,11 @@ api.get(['/sites', '/sites/'], (req, res) => {
           {
             user: q.Select(['ref'], q.Var('user')),
             site: q.Var('sites'),
-          },
-        ),
-      ),
+          }
+        )
+      )
     ),
-    { secret },
+    { secret }
   );
 
   getSites
@@ -342,7 +342,7 @@ api.get(['/sites', '/sites/'], (req, res) => {
     });
 });
 
-api.get(['/sites/:id', '/sites/:id/'], (req, res) => {
+api.get(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
   const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
@@ -357,7 +357,7 @@ api.get(['/sites/:id', '/sites/:id/'], (req, res) => {
         userRef: q.Select(['data', 'user'], q.Var('site')),
         siteRef: q.Ref(
           q.Collection('sites'),
-          q.Select(['ref', 'id'], q.Var('site')),
+          q.Select(['ref', 'id'], q.Var('site'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
@@ -365,16 +365,16 @@ api.get(['/sites/:id', '/sites/:id/'], (req, res) => {
       {
         isAllowed: q.Or(
           q.Equals(q.Var('userRef'), q.Var('identityRef')),
-          q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+          q.Equals(q.Var('siteRef'), q.Var('identityRef'))
         ),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let getSite = client.query(
     q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
-    { secret },
+    { secret }
   );
 
   testAuthentication
@@ -422,7 +422,7 @@ api.get(['/sites/:id', '/sites/:id/'], (req, res) => {
     });
 });
 
-api.put(['/sites/:id', '/sites/:id/'], (req, res) => {
+api.put(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
   const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
@@ -448,7 +448,7 @@ api.put(['/sites/:id', '/sites/:id/'], (req, res) => {
         userRef: q.Select(['data', 'user'], q.Var('site')),
         siteRef: q.Ref(
           q.Collection('sites'),
-          q.Select(['ref', 'id'], q.Var('site')),
+          q.Select(['ref', 'id'], q.Var('site'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
@@ -456,11 +456,11 @@ api.put(['/sites/:id', '/sites/:id/'], (req, res) => {
       {
         isAllowed: q.Or(
           q.Equals(q.Var('userRef'), q.Var('identityRef')),
-          q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+          q.Equals(q.Var('siteRef'), q.Var('identityRef'))
         ),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let updateSite = client.query(
@@ -477,10 +477,10 @@ api.put(['/sites/:id', '/sites/:id/'], (req, res) => {
             .replace(/,/g, '-'),
         },
         data,
-      }),
+      })
     ),
 
-    { secret },
+    { secret }
   );
 
   testAuthentication
@@ -528,7 +528,7 @@ api.put(['/sites/:id', '/sites/:id/'], (req, res) => {
     });
 });
 
-api.delete(['/sites/:id', '/sites/:id/'], (req, res) => {
+api.delete(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
   const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
@@ -543,7 +543,7 @@ api.delete(['/sites/:id', '/sites/:id/'], (req, res) => {
         userRef: q.Select(['data', 'user'], q.Var('site')),
         siteRef: q.Ref(
           q.Collection('sites'),
-          q.Select(['ref', 'id'], q.Var('site')),
+          q.Select(['ref', 'id'], q.Var('site'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
@@ -551,11 +551,11 @@ api.delete(['/sites/:id', '/sites/:id/'], (req, res) => {
       {
         isAllowed: q.Or(
           q.Equals(q.Var('userRef'), q.Var('identityRef')),
-          q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+          q.Equals(q.Var('siteRef'), q.Var('identityRef'))
         ),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let deleteSite = client.query(
@@ -563,10 +563,10 @@ api.delete(['/sites/:id', '/sites/:id/'], (req, res) => {
       {
         site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
       },
-      q.Delete(q.Select('ref', q.Var('site'))),
+      q.Delete(q.Select('ref', q.Var('site')))
     ),
 
-    { secret },
+    { secret }
   );
 
   testAuthentication
@@ -618,199 +618,193 @@ api.delete(['/sites/:id', '/sites/:id/'], (req, res) => {
 //   COMMENT API ROUTES   //
 /////////////////////////
 
-api.get(
-  ['/users/:id/comments', '/users/:id/comments/'],
-  (req, res) => {
-    const secret = req.headers.key;
-    if (secret === '') {
-      return res.status(404).send({
-        error: 'no_token',
-        message: 'Please provide an access token.',
-      });
-    }
-    let testAuthentication = client.query(
-      q.Let(
-        {
-          user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
-          userRef: q.Select('ref', q.Var('user')),
-          // siteRef: q.Ref(
-          //   q.Collection('sites'),
-          //   q.Select(['ref', 'id'], q.Var('site')),
-          // ),
-          // userRef: q.Ref(q.Collection('users'), q.Var('user')),
-          identityRef: q.Identity(),
-        },
-        {
-          isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
-        },
-      ),
-      { secret },
-    );
+api.get(['/api/users/:id/comments', '/api/users/:id/comments/'], (req, res) => {
+  const secret = req.headers.key;
+  if (secret === '') {
+    return res.status(404).send({
+      error: 'no_token',
+      message: 'Please provide an access token.',
+    });
+  }
+  let testAuthentication = client.query(
+    q.Let(
+      {
+        user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
+        userRef: q.Select('ref', q.Var('user')),
+        // siteRef: q.Ref(
+        //   q.Collection('sites'),
+        //   q.Select(['ref', 'id'], q.Var('site')),
+        // ),
+        // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+        identityRef: q.Identity(),
+      },
+      {
+        isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
+      }
+    ),
+    { secret }
+  );
 
-    let getComments = client.query(
-      q.Map(
-        q.Paginate(q.Match(q.Index('all_comments')), { size: 1000 }),
-        q.Lambda(
-          'commentsRef',
-          q.Let(
-            {
-              comments: q.Get(q.Var('commentsRef')),
-              user: q.Get(q.Select(['data', 'user'], q.Var('comments'))),
-              site: q.Get(q.Select(['data', 'site'], q.Var('comments'))),
-            },
-            {
-              ref: q.Select(['ref'], q.Var('comments')),
-              data: q.Select(['data'], q.Var('comments')),
-            },
-          ),
+  let getComments = client.query(
+    q.Map(
+      q.Paginate(q.Match(q.Index('all_comments')), { size: 1000 }),
+      q.Lambda(
+        'commentsRef',
+        q.Let(
+          {
+            comments: q.Get(q.Var('commentsRef')),
+            user: q.Get(q.Select(['data', 'user'], q.Var('comments'))),
+            site: q.Get(q.Select(['data', 'site'], q.Var('comments'))),
+          },
+          {
+            ref: q.Select(['ref'], q.Var('comments')),
+            data: q.Select(['data'], q.Var('comments')),
+          }
+        )
+      )
+    ),
+    { secret }
+  );
+
+  testAuthentication
+    .then((response) => {
+      if (response.isAllowed) {
+        getComments
+          .then((responseTwo) => {
+            return res.status(200).send(responseTwo);
+          })
+          .catch((errorTwo) => {
+            return res.status(300).send(errorTwo);
+          });
+      } else {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this user's comments. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      }
+    })
+    .catch((error) => {
+      if (error.name === 'PermissionDenied') {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this user's comments. If this is a mistake, please contact jarod@staticbox.io",
+          data: error,
+        });
+      } else if (error.name === 'NotFound') {
+        return res.status(404).send({
+          error: 'not_found',
+          message: `No user exists with the id ${req.params.id}.`,
+        });
+      } else if (error.name === 'Unauthorized') {
+        return res.status(404).send({
+          error: 'unauthorized',
+          message: `The token you provided is invalid.`,
+        });
+      } else {
+        return res.status(500).send({
+          error: 'server_error',
+          data: error,
+          message: `We encountered an unidentified error.`,
+        });
+      }
+    });
+});
+
+api.get(['/api/sites/:id/comments', '/api/sites/:id/comments/'], (req, res) => {
+  const secret = req.headers.key;
+  if (secret === '') {
+    return res.status(404).send({
+      error: 'no_token',
+      message: 'Please provide an access token.',
+    });
+  }
+  let testAuthentication = client.query(
+    q.Let(
+      {
+        site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
+        userRef: q.Select(['data', 'user'], q.Var('site')),
+        siteRef: q.Ref(
+          q.Collection('sites'),
+          q.Select(['ref', 'id'], q.Var('site'))
         ),
-      ),
-      { secret },
-    );
+        // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+        identityRef: q.Identity(),
+      },
+      {
+        isAllowed: q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+      }
+    ),
+    { secret }
+  );
 
-    testAuthentication
-      .then((response) => {
-        if (response.isAllowed) {
-          getComments
-            .then((responseTwo) => {
-              return res.status(200).send(responseTwo);
-            })
-            .catch((errorTwo) => {
-              return res.status(300).send(errorTwo);
-            });
-        } else {
-          return res.status(403).send({
-            error: 'permission_denied',
-            message:
-              "You don't have permission to access this user's comments. If this is a mistake, please contact jarod@staticbox.io",
-          });
-        }
-      })
-      .catch((error) => {
-        if (error.name === 'PermissionDenied') {
-          return res.status(403).send({
-            error: 'permission_denied',
-            message:
-              "You don't have permission to access this user's comments. If this is a mistake, please contact jarod@staticbox.io",
-            data: error,
-          });
-        } else if (error.name === 'NotFound') {
-          return res.status(404).send({
-            error: 'not_found',
-            message: `No user exists with the id ${req.params.id}.`,
-          });
-        } else if (error.name === 'Unauthorized') {
-          return res.status(404).send({
-            error: 'unauthorized',
-            message: `The token you provided is invalid.`,
-          });
-        } else {
-          return res.status(500).send({
-            error: 'server_error',
-            data: error,
-            message: `We encountered an unidentified error.`,
-          });
-        }
-      });
-  },
-);
+  let getComments = client.query(
+    q.Map(
+      q.Paginate(q.Match(q.Index('all_comments'))),
+      q.Lambda(
+        'commentsRef',
+        q.Let(
+          {
+            comments: q.Get(q.Var('commentsRef')),
+            user: q.Select(['data', 'user'], q.Var('comments')),
+            site: q.Select(['data', 'site'], q.Var('comments')),
+          },
+          {
+            ref: q.Select(['ref'], q.Var('comments')),
+            data: q.Select(['data'], q.Var('comments')),
+          }
+        )
+      )
+    ),
+    { secret }
+  );
 
-api.get(
-  ['/sites/:id/comments', '/sites/:id/comments/'],
-  (req, res) => {
-    const secret = req.headers.key;
-    if (secret === '') {
-      return res.status(404).send({
-        error: 'no_token',
-        message: 'Please provide an access token.',
-      });
-    }
-    let testAuthentication = client.query(
-      q.Let(
-        {
-          site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
-          userRef: q.Select(['data', 'user'], q.Var('site')),
-          siteRef: q.Ref(
-            q.Collection('sites'),
-            q.Select(['ref', 'id'], q.Var('site')),
-          ),
-          // userRef: q.Ref(q.Collection('users'), q.Var('user')),
-          identityRef: q.Identity(),
-        },
-        {
-          isAllowed: q.Equals(q.Var('siteRef'), q.Var('identityRef')),
-        },
-      ),
-      { secret },
-    );
-
-    let getComments = client.query(
-      q.Map(
-        q.Paginate(q.Match(q.Index('all_comments'))),
-        q.Lambda(
-          'commentsRef',
-          q.Let(
-            {
-              comments: q.Get(q.Var('commentsRef')),
-              user: q.Select(['data', 'user'], q.Var('comments')),
-              site: q.Select(['data', 'site'], q.Var('comments')),
-            },
-            {
-              ref: q.Select(['ref'], q.Var('comments')),
-              data: q.Select(['data'], q.Var('comments')),
-            },
-          ),
-        ),
-      ),
-      { secret },
-    );
-
-    testAuthentication
-      .then((response) => {
-        if (response.isAllowed) {
-          getComments
-            .then((responseTwo) => {
-              return res.status(200).send(responseTwo);
-            })
-            .catch((errorTwo) => {
-              return res.status(300).send(errorTwo);
-            });
-        } else {
-          return res.status(403).send({
-            error: 'permission_denied',
-            message:
-              "You don't have permission to access this site's comments. If this is a mistake, please contact jarod@staticbox.io",
+  testAuthentication
+    .then((response) => {
+      if (response.isAllowed) {
+        getComments
+          .then((responseTwo) => {
+            return res.status(200).send(responseTwo);
+          })
+          .catch((errorTwo) => {
+            return res.status(300).send(errorTwo);
           });
-        }
-      })
-      .catch((error) => {
-        if (error.name === 'PermissionDenied') {
-          return res.status(403).send({
-            error: 'permission_denied',
-            message:
-              "You don't have permission to access this site's comments. If this is a mistake, please contact jarod@staticbox.io",
-            data: error,
-          });
-        } else if (error.name === 'NotFound') {
-          return res.status(404).send({
-            error: 'not_found',
-            message: `No site exists with the id ${req.params.id}.`,
-          });
-        } else if (error.name === 'Unauthorized') {
-          return res.status(404).send({
-            error: 'unauthorized',
-            message: `The token you provided is invalid.`,
-          });
-        } else {
-          return res.status(500).send({
-            error: 'server_error',
-            data: error,
-            message: `We encountered an unidentified error.`,
-          });
-        }
-      });
-  },
-);
+      } else {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            `You don't have permission to access this site's comments. Try generating an api key for the site ${req.params.id} at https://app.staticbox.io/sites/${req.params.id}/settings/api`,
+        });
+      }
+    })
+    .catch((error) => {
+      if (error.name === 'PermissionDenied') {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this site's comments. If this is a mistake, please contact jarod@staticbox.io",
+          data: error,
+        });
+      } else if (error.name === 'NotFound') {
+        return res.status(404).send({
+          error: 'not_found',
+          message: `No site exists with the id ${req.params.id}.`,
+        });
+      } else if (error.name === 'Unauthorized') {
+        return res.status(404).send({
+          error: 'unauthorized',
+          message: `The token you provided is invalid.`,
+        });
+      } else {
+        return res.status(500).send({
+          error: 'server_error',
+          data: error,
+          message: `We encountered an unidentified error.`,
+        });
+      }
+    });
+});
 
 // Export API function
 exports.api = functions.https.onRequest(api);
