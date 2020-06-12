@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 // Firebase requires
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
@@ -49,14 +50,14 @@ api.get(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
       },
       {
         isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let getUser = client.query(
     q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
-    { secret },
+    { secret }
   );
 
   // testAuthentication
@@ -143,10 +144,10 @@ api.put(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
       },
       q.Update(q.Select('ref', q.Var('user')), {
         data,
-      }),
+      })
     ),
 
-    { secret },
+    { secret }
   );
 
   // testAuthentication
@@ -208,16 +209,16 @@ api.delete(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
         user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
         userRef: q.Ref(
           q.Collection('users'),
-          q.Select(['ref', 'id'], q.Var('user')),
+          q.Select(['ref', 'id'], q.Var('user'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
       },
       {
         isAllowed: q.Or(q.Equals(q.Var('userRef'), q.Var('identityRef'))),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let deleteUser = client.query(
@@ -225,10 +226,10 @@ api.delete(['/api/v1/users/:id', '/api/v1/users/:id/'], (req, res) => {
       {
         user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
       },
-      q.Delete(q.Select('ref', q.Var('user'))),
+      q.Delete(q.Select('ref', q.Var('user')))
     ),
 
-    { secret },
+    { secret }
   );
 
   // testAuthentication
@@ -301,11 +302,11 @@ api.get(['/api/v1/sites', '/api/v1/sites/'], (req, res) => {
           {
             user: q.Select(['ref'], q.Var('user')),
             site: q.Var('sites'),
-          },
-        ),
-      ),
+          }
+        )
+      )
     ),
-    { secret },
+    { secret }
   );
 
   getSites
@@ -354,7 +355,7 @@ api.get(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
         userRef: q.Select(['data', 'user'], q.Var('site')),
         siteRef: q.Ref(
           q.Collection('sites'),
-          q.Select(['ref', 'id'], q.Var('site')),
+          q.Select(['ref', 'id'], q.Var('site'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
@@ -362,16 +363,16 @@ api.get(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
       {
         isAllowed: q.Or(
           q.Equals(q.Var('userRef'), q.Var('identityRef')),
-          q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+          q.Equals(q.Var('siteRef'), q.Var('identityRef'))
         ),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let getSite = client.query(
     q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
-    { secret },
+    { secret }
   );
 
   testAuthentication
@@ -384,13 +385,12 @@ api.get(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
           .catch((errorTwo) => {
             return res.status(300).send(errorTwo);
           });
-      } else {
-        return res.status(403).send({
-          error: 'permission_denied',
-          message:
-            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
-        });
       }
+      return res.status(403).send({
+        error: 'permission_denied',
+        message:
+          "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+      });
     })
     .catch((error) => {
       if (error.name === 'PermissionDenied') {
@@ -445,7 +445,7 @@ api.put(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
         userRef: q.Select(['data', 'user'], q.Var('site')),
         siteRef: q.Ref(
           q.Collection('sites'),
-          q.Select(['ref', 'id'], q.Var('site')),
+          q.Select(['ref', 'id'], q.Var('site'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
@@ -453,11 +453,11 @@ api.put(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
       {
         isAllowed: q.Or(
           q.Equals(q.Var('userRef'), q.Var('identityRef')),
-          q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+          q.Equals(q.Var('siteRef'), q.Var('identityRef'))
         ),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let updateSite = client.query(
@@ -474,10 +474,10 @@ api.put(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
             .replace(/\,/g, '-'),
         },
         data,
-      }),
+      })
     ),
 
-    { secret },
+    { secret }
   );
 
   testAuthentication
@@ -490,13 +490,12 @@ api.put(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
           .catch((errorTwo) => {
             return res.status(300).send(errorTwo);
           });
-      } else {
-        return res.status(403).send({
-          error: 'permission_denied',
-          message:
-            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
-        });
       }
+      return res.status(403).send({
+        error: 'permission_denied',
+        message:
+          "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+      });
     })
     .catch((error) => {
       if (error.name === 'PermissionDenied') {
@@ -540,7 +539,7 @@ api.delete(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
         userRef: q.Select(['data', 'user'], q.Var('site')),
         siteRef: q.Ref(
           q.Collection('sites'),
-          q.Select(['ref', 'id'], q.Var('site')),
+          q.Select(['ref', 'id'], q.Var('site'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
         identityRef: q.Identity(),
@@ -548,11 +547,11 @@ api.delete(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
       {
         isAllowed: q.Or(
           q.Equals(q.Var('userRef'), q.Var('identityRef')),
-          q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+          q.Equals(q.Var('siteRef'), q.Var('identityRef'))
         ),
-      },
+      }
     ),
-    { secret },
+    { secret }
   );
 
   let deleteSite = client.query(
@@ -560,10 +559,10 @@ api.delete(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
       {
         site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
       },
-      q.Delete(q.Select('ref', q.Var('site'))),
+      q.Delete(q.Select('ref', q.Var('site')))
     ),
 
-    { secret },
+    { secret }
   );
 
   testAuthentication
@@ -576,13 +575,12 @@ api.delete(['/api/v1/sites/:id', '/api/v1/sites/:id/'], (req, res) => {
           .catch((errorTwo) => {
             return res.status(300).send(errorTwo);
           });
-      } else {
-        return res.status(403).send({
-          error: 'permission_denied',
-          message:
-            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
-        });
       }
+      return res.status(403).send({
+        error: 'permission_denied',
+        message:
+          "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+      });
     })
     .catch((error) => {
       if (error.name === 'PermissionDenied') {
@@ -639,9 +637,9 @@ api.get(
         },
         {
           isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
-        },
+        }
       ),
-      { secret },
+      { secret }
     );
 
     let getComments = client.query(
@@ -658,11 +656,11 @@ api.get(
             {
               ref: q.Select(['ref'], q.Var('comments')),
               data: q.Select(['data'], q.Var('comments')),
-            },
-          ),
-        ),
+            }
+          )
+        )
       ),
-      { secret },
+      { secret }
     );
 
     testAuthentication
@@ -675,13 +673,12 @@ api.get(
             .catch((errorTwo) => {
               return res.status(300).send(errorTwo);
             });
-        } else {
-          return res.status(403).send({
-            error: 'permission_denied',
-            message:
-              "You don't have permission to access this user's comments. If this is a mistake, please contact jarod@staticbox.io",
-          });
         }
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this user's comments. If this is a mistake, please contact jarod@staticbox.io",
+        });
       })
       .catch((error) => {
         if (error.name === 'PermissionDenied') {
@@ -709,7 +706,7 @@ api.get(
           });
         }
       });
-  },
+  }
 );
 
 api.get(
@@ -729,7 +726,7 @@ api.get(
           userRef: q.Select(['data', 'user'], q.Get(q.Identity())),
           siteRef: q.Ref(
             q.Collection('sites'),
-            q.Select(['ref', 'id'], q.Var('site')),
+            q.Select(['ref', 'id'], q.Var('site'))
           ),
           // userRef: q.Ref(q.Collection('users'), q.Var('user')),
           identityRef: q.Identity(),
@@ -737,11 +734,11 @@ api.get(
         {
           isAllowed: q.Or(
             q.Equals(q.Var('siteRef'), q.Var('identityRef')),
-            q.Equals(q.Var('userRef'), q.Var('identityRef')),
+            q.Equals(q.Var('userRef'), q.Var('identityRef'))
           ),
-        },
+        }
       ),
-      { secret },
+      { secret }
     );
 
     let getComments = client.query(
@@ -760,11 +757,11 @@ api.get(
               data: q.Select(['data'], q.Var('comments')),
               user: q.Select('data', q.Var('user')),
               site: q.Select('data', q.Var('site')),
-            },
-          ),
-        ),
+            }
+          )
+        )
       ),
-      { secret },
+      { secret }
     );
 
     testAuthentication
@@ -777,13 +774,12 @@ api.get(
             .catch((errorTwo) => {
               return res.status(300).send(errorTwo);
             });
-        } else {
-          return res.status(403).send({
-            error: 'permission_denied',
-            message:
-              "You don't have permission to access this site's comments. If this is a mistake, please contact jarod@staticbox.io",
-          });
         }
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this site's comments. If this is a mistake, please contact jarod@staticbox.io",
+        });
       })
       .catch((error) => {
         if (error.name === 'PermissionDenied') {
@@ -812,7 +808,7 @@ api.get(
           });
         }
       });
-  },
+  }
 );
 
 // Export API function
