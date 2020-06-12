@@ -7,7 +7,7 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
-        "source": "/api/v1**/**",
+        "source": "api/**",
         "function": "api"
       }
     ]

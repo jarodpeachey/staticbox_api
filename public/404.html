@@ -86,9 +86,9 @@
 
   <body>
     <div id="message">
-      <h2>Welcome</h2>
-      <h1>Staticbox API</h1>
-      <p>This is the homepage for the api. To get started, make a request to https://api.staticbox.io/api!</p>
+      <h2>Route Not Found</h2>
+      <h1>404</h1>
+      <p>This route was not found. Please refer to the documentation.</p>
       <a target="_blank" href="https://docs.staticbox.io">Open Documentation</a>
     </div>
 
@@ -106,7 +106,7 @@
 
         try {
           let app = firebase.app();
-          let features = [ 'auth','database','messaging','storage', 'hosting' ].filter( feature => typeof app[ feature ] === 'function' );
+          let features = [ 'auth','database','messaging','storage','hosting' ].filter( feature => typeof app[ feature ] === 'function' );
           document.getElementById( 'load' ).innerHTML = `Firebase SDK loaded with ${ features.join( ', ' ) }`;
         } catch ( e ) {
           console.error( e );
