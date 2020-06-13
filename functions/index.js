@@ -31,7 +31,7 @@ app.get('/hello-world', (req, res) => {
 });
 
 server.get(['/api/users/:id', '/api/users/:id/'], (req, res) => {
-  const secret = req.headers.key;
+  const secret = req.headers.Key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -109,7 +109,7 @@ server.get(['/api/users/:id', '/api/users/:id/'], (req, res) => {
 });
 
 server.put(['/api/users/:id', '/api/users/:id/'], (req, res) => {
-  const secret = req.headers.key;
+  const secret = req.headers.Key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -198,7 +198,7 @@ server.put(['/api/users/:id', '/api/users/:id/'], (req, res) => {
 });
 
 server.delete(['/api/users/:id', '/api/users/:id/'], (req, res) => {
-  const secret = req.headers.key;
+  const secret = req.headers.Key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -284,7 +284,7 @@ server.delete(['/api/users/:id', '/api/users/:id/'], (req, res) => {
 /////////////////////////
 
 server.get(['/api/sites', '/api/sites/'], (req, res) => {
-  const secret = req.headers.key;
+  const secret = req.headers.Key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -343,7 +343,7 @@ server.get(['/api/sites', '/api/sites/'], (req, res) => {
 });
 
 server.get(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
-  const secret = req.headers.key;
+  const secret = req.headers.Key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -423,7 +423,7 @@ server.get(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
 });
 
 server.put(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
-  const secret = req.headers.key;
+  const secret = req.headers.Key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -529,7 +529,7 @@ server.put(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
 });
 
 server.delete(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
-  const secret = req.headers.key;
+  const secret = req.headers.Key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -621,7 +621,7 @@ server.delete(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
 server.get(
   ['/api/users/:id/comments', '/api/users/:id/comments/'],
   (req, res) => {
-    const secret = req.headers.key;
+    const secret = req.headers.Key;
     if (secret === '') {
       return res.status(404).send({
         error: 'no_token',
@@ -718,7 +718,7 @@ server.get(
 server.get(
   ['/api/sites/:id/comments', '/api/sites/:id/comments/'],
   (req, res) => {
-    const secret = req.headers.key;
+    const secret = req.headers.Key;
     if (secret === '') {
       return res.status(404).send({
         error: 'no_token',
