@@ -31,7 +31,7 @@ app.get('/hello-world', (req, res) => {
 });
 
 server.get(['/api/users/:id', '/api/users/:id/'], (req, res) => {
-  const secret = req.headers.Key;
+  const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -109,7 +109,7 @@ server.get(['/api/users/:id', '/api/users/:id/'], (req, res) => {
 });
 
 server.put(['/api/users/:id', '/api/users/:id/'], (req, res) => {
-  const secret = req.headers.Key;
+  const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -198,7 +198,7 @@ server.put(['/api/users/:id', '/api/users/:id/'], (req, res) => {
 });
 
 server.delete(['/api/users/:id', '/api/users/:id/'], (req, res) => {
-  const secret = req.headers.Key;
+  const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -284,7 +284,7 @@ server.delete(['/api/users/:id', '/api/users/:id/'], (req, res) => {
 /////////////////////////
 
 server.get(['/api/sites', '/api/sites/'], (req, res) => {
-  const secret = req.headers.Key;
+  const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -343,7 +343,7 @@ server.get(['/api/sites', '/api/sites/'], (req, res) => {
 });
 
 server.get(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
-  const secret = req.headers.Key;
+  const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -423,7 +423,7 @@ server.get(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
 });
 
 server.put(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
-  const secret = req.headers.Key;
+  const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -529,7 +529,7 @@ server.put(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
 });
 
 server.delete(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
-  const secret = req.headers.Key;
+  const secret = req.headers.key;
   if (secret === '') {
     return res.status(404).send({
       error: 'no_token',
@@ -621,7 +621,7 @@ server.delete(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
 server.get(
   ['/api/users/:id/comments', '/api/users/:id/comments/'],
   (req, res) => {
-    const secret = req.headers.Key;
+    const secret = req.headers.key;
     if (secret === '') {
       return res.status(404).send({
         error: 'no_token',
@@ -718,7 +718,7 @@ server.get(
 server.get(
   ['/api/sites/:id/comments', '/api/sites/:id/comments/'],
   (req, res) => {
-    const secret = req.headers.Key;
+    const secret = req.headers.key;
     if (secret === '') {
       return res.status(404).send({
         error: 'no_token',
@@ -788,6 +788,102 @@ server.get(
             error: 'permission_denied',
             message:
               "You don't have permission to access this site's comments. If this is a mistake, please contact jarod@staticbox.io",
+            data: error,
+          });
+        } else if (error.name === 'NotFound') {
+          return res.status(404).send({
+            error: 'not_found',
+            message: `No site exists with the id ${req.params.id}.`,
+          });
+        } else if (error.name === 'Unauthorized') {
+          return res.status(404).send({
+            error: 'unauthorized',
+            message: `The token you provided is invalid.`,
+          });
+        } else {
+          return res.status(500).send({
+            error: 'server_error',
+            data: error,
+            message: `We encountered an unidentified error.`,
+          });
+        }
+      });
+  }
+);
+
+server.get(
+  ['/api/sites/:id/styles', '/api/sites/:id/styles/'],
+  (req, res) => {
+    const secret = req.headers.key;
+    if (secret === '') {
+      return res.status(404).send({
+        error: 'no_token',
+        message: 'Please provide an access token.',
+      });
+    }
+    let testAuthentication = client.query(
+      q.Let(
+        {
+          site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
+          userRef: q.Select(['data', 'user'], q.Var('site')),
+          siteRef: q.Ref(
+            q.Collection('sites'),
+            q.Select(['ref', 'id'], q.Var('site'))
+          ),
+          // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+          identityRef: q.Identity(),
+        },
+        {
+          isAllowed: q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+        }
+      ),
+      { secret }
+    );
+
+    let getStyles = client.query(
+      q.Map(
+        q.Paginate(q.Match(q.Index('all_styles'))),
+        q.Lambda(
+          'stylesRef',
+          q.Let(
+            {
+              styles: q.Get(q.Var('stylesRef')),
+              user: q.Select(['data', 'user'], q.Var('styles')),
+              site: q.Select(['data', 'site'], q.Var('styles')),
+            },
+            {
+              ref: q.Select(['ref'], q.Var('styles')),
+              data: q.Select(['data'], q.Var('styles')),
+            }
+          )
+        )
+      ),
+      { secret }
+    );
+
+    testAuthentication
+      .then((response) => {
+        if (response.isAllowed) {
+          getStyles
+            .then((responseTwo) => {
+              return res.status(200).send(responseTwo);
+            })
+            .catch((errorTwo) => {
+              return res.status(300).send(errorTwo);
+            });
+        } else {
+          return res.status(403).send({
+            error: 'permission_denied',
+            message: `You don't have permission to access this site's styles. Try generating an api key for the site ${req.params.id} at https://app.staticbox.io/sites/${req.params.id}/settings/api`,
+          });
+        }
+      })
+      .catch((error) => {
+        if (error.name === 'PermissionDenied') {
+          return res.status(403).send({
+            error: 'permission_denied',
+            message:
+              "You don't have permission to access this site's styles. If this is a mistake, please contact jarod@staticbox.io",
             data: error,
           });
         } else if (error.name === 'NotFound') {
