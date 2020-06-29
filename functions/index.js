@@ -52,6 +52,7 @@ server.get(['/api/users/:id', '/api/users/:id/'], (req, res) => {
       },
       {
         isAllowed: q.Equals(q.Var('userRef'), q.Var('identityRef')),
+        user: q.Var('user'),
       }
     ),
     { secret }
@@ -62,24 +63,35 @@ server.get(['/api/users/:id', '/api/users/:id/'], (req, res) => {
     { secret }
   );
 
-  // testAuthentication
-  //   .then((response) => {
-  //     if (response.isAllowed) {
-  getUser
-    .then((responseTwo) => {
-      return res.status(200).send(responseTwo);
+  testAuthentication
+    .then((response) => {
+      if (response.isAllowed) {
+        if (
+          response.user.data.status !== 'active' &&
+          response.user.data.status !== 'trialing'
+        ) {
+          return res.status(403).send({
+            error: 'account_hold',
+            message:
+              'Your account is temporarily on hold. You can contact jarod@staticbox.io to resolve this issue.',
+          });
+        } else {
+          getUser
+            .then((responseTwo) => {
+              return res.status(200).send(responseTwo);
+            })
+            .catch((errorTwo) => {
+              return res.status(300).send(errorTwo);
+            });
+        }
+      } else {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      }
     })
-    //       .catch((errorTwo) => {
-    //         return res.status(300).send(errorTwo);
-    //       });
-    //   } else {
-    //     return res.status(403).send({
-    //       error: 'permission_denied',
-    //       message:
-    //         "You don't have permission to access this user. If this is a mistake, please contact jarod@staticbox.io",
-    //     });
-    //   }
-    // })
     .catch((error) => {
       if (error.name === 'PermissionDenied') {
         return res.status(403).send({
@@ -119,25 +131,24 @@ server.put(['/api/users/:id', '/api/users/:id/'], (req, res) => {
   const body = req.body;
   const data = body;
 
-  // let testAuthentication = client.query(
-  //   q.Let(
-  //     {
-  //       user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
-  //       userRef: q.Ref(
-  //         q.Collection('users'),
-  //         q.Select(['ref', 'id'], q.Var('user')),
-  //       ),
-  //       // userRef: q.Ref(q.Collection('users'), q.Var('user')),
-  //       identityRef: q.Identity(),
-  //     },
-  //     {
-  //       isAllowed: q.Or(
-  //         q.Equals(q.Var('userRef'), q.Var('identityRef'))
-  //       ),
-  //     },
-  //   ),
-  //   { secret },
-  // );
+  let testAuthentication = client.query(
+    q.Let(
+      {
+        user: q.Get(q.Match(q.Index('user_by_id'), req.params.id)),
+        userRef: q.Ref(
+          q.Collection('users'),
+          q.Select(['ref', 'id'], q.Var('user'))
+        ),
+        // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+        identityRef: q.Identity(),
+      },
+      {
+        isAllowed: q.Or(q.Equals(q.Var('userRef'), q.Var('identityRef'))),
+        user: q.Var('user'),
+      }
+    ),
+    { secret }
+  );
 
   let updateUser = client.query(
     q.Let(
@@ -152,24 +163,35 @@ server.put(['/api/users/:id', '/api/users/:id/'], (req, res) => {
     { secret }
   );
 
-  // testAuthentication
-  //   .then((response) => {
-  //     if (response.isAllowed) {
-  updateUser
-    .then((responseTwo) => {
-      return res.status(200).send(responseTwo);
+  testAuthentication
+    .then((response) => {
+      if (response.isAllowed) {
+        if (
+          response.user.data.status !== 'active' &&
+          response.user.data.status !== 'trialing'
+        ) {
+          return res.status(403).send({
+            error: 'account_hold',
+            message:
+              'Your account is temporarily on hold. You can contact jarod@staticbox.io to resolve this issue.',
+          });
+        } else {
+          updateUser
+            .then((responseTwo) => {
+              return res.status(200).send(responseTwo);
+            })
+            .catch((errorTwo) => {
+              return res.status(300).send(errorTwo);
+            });
+        }
+      } else {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      }
     })
-    // .catch((errorTwo) => {
-    //   return res.status(300).send(errorTwo);
-    // });
-    //   } else {
-    //     return res.status(403).send({
-    //       error: 'permission_denied',
-    //       message:
-    //         "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
-    //     });
-    //   }
-    // })
     .catch((error) => {
       if (error.name === 'PermissionDenied') {
         return res.status(403).send({
@@ -218,6 +240,7 @@ server.delete(['/api/users/:id', '/api/users/:id/'], (req, res) => {
       },
       {
         isAllowed: q.Or(q.Equals(q.Var('userRef'), q.Var('identityRef'))),
+        user: q.Var('user'),
       }
     ),
     { secret }
@@ -234,24 +257,35 @@ server.delete(['/api/users/:id', '/api/users/:id/'], (req, res) => {
     { secret }
   );
 
-  // testAuthentication
-  //   .then((response) => {
-  //     if (response.isAllowed) {
-  deleteUser
-    .then((responseTwo) => {
-      return res.status(200).send(responseTwo);
+  testAuthentication
+    .then((response) => {
+      if (response.isAllowed) {
+        if (
+          response.user.data.status !== 'active' &&
+          response.user.data.status !== 'trialing'
+        ) {
+          return res.status(403).send({
+            error: 'account_hold',
+            message:
+              'Your account is temporarily on hold. You can contact jarod@staticbox.io to resolve this issue.',
+          });
+        } else {
+          deleteUser
+            .then((responseTwo) => {
+              return res.status(200).send(responseTwo);
+            })
+            .catch((errorTwo) => {
+              return res.status(300).send(errorTwo);
+            });
+        }
+      } else {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to delete this user. If this is a mistake, please contact jarod@staticbox.io",
+        });
+      }
     })
-    //       .catch((errorTwo) => {
-    //         return res.status(300).send(errorTwo);
-    //       });
-    //   } else {
-    //     return res.status(403).send({
-    //       error: 'permission_denied',
-    //       message:
-    //         "You don't have permission to delete this user. If this is a mistake, please contact jarod@staticbox.io",
-    //     });
-    //   }
-    // })
     .catch((error) => {
       if (error.name === 'PermissionDenied') {
         return res.status(403).send({
@@ -312,8 +346,19 @@ server.get(['/api/sites', '/api/sites/'], (req, res) => {
   );
 
   getSites
-    .then((responseTwo) => {
-      return res.status(200).send(responseTwo);
+    .then((response) => {
+      if (
+        response.user.data.status !== 'active' &&
+        response.user.data.status !== 'trialing'
+      ) {
+        return res.status(403).send({
+          error: 'account_hold',
+          message:
+            'Your account is temporarily on hold. You can contact jarod@staticbox.io to resolve this issue.',
+        });
+      } else {
+        return res.status(200).send(response);
+      }
     })
     .catch((error) => {
       if (error.name === 'PermissionDenied') {
@@ -355,6 +400,7 @@ server.get(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
       {
         site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
         userRef: q.Select(['data', 'user'], q.Var('site')),
+        user: q.Get(q.Select(['data', 'user'], q.Var('site'))),
         siteRef: q.Ref(
           q.Collection('sites'),
           q.Select(['ref', 'id'], q.Var('site'))
@@ -367,6 +413,7 @@ server.get(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
           q.Equals(q.Var('userRef'), q.Var('identityRef')),
           q.Equals(q.Var('siteRef'), q.Var('identityRef'))
         ),
+        user: q.Var('user'),
       }
     ),
     { secret }
@@ -380,13 +427,24 @@ server.get(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
   testAuthentication
     .then((response) => {
       if (response.isAllowed) {
-        getSite
-          .then((responseTwo) => {
-            return res.status(200).send(responseTwo);
-          })
-          .catch((errorTwo) => {
-            return res.status(300).send(errorTwo);
+        if (
+          response.user.data.status !== 'active' &&
+          response.user.data.status !== 'trialing'
+        ) {
+          return res.status(403).send({
+            error: 'account_hold',
+            message:
+              'Your account is temporarily on hold. You can contact jarod@staticbox.io to resolve this issue.',
           });
+        } else {
+          getSite
+            .then((responseTwo) => {
+              return res.status(200).send(responseTwo);
+            })
+            .catch((errorTwo) => {
+              return res.status(300).send(errorTwo);
+            });
+        }
       } else {
         return res.status(403).send({
           error: 'permission_denied',
@@ -451,6 +509,7 @@ server.put(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
           q.Select(['ref', 'id'], q.Var('site'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+        user: q.Get(q.Select(['data', 'user'], q.Var('site'))),
         identityRef: q.Identity(),
       },
       {
@@ -458,6 +517,7 @@ server.put(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
           q.Equals(q.Var('userRef'), q.Var('identityRef')),
           q.Equals(q.Var('siteRef'), q.Var('identityRef'))
         ),
+        user: q.Var('user'),
       }
     ),
     { secret }
@@ -479,20 +539,30 @@ server.put(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
         data,
       })
     ),
-
     { secret }
   );
 
   testAuthentication
     .then((response) => {
       if (response.isAllowed) {
-        updateSite
-          .then((responseTwo) => {
-            return res.status(200).send(responseTwo);
-          })
-          .catch((errorTwo) => {
-            return res.status(300).send(errorTwo);
+        if (
+          response.user.data.status !== 'active' &&
+          response.user.data.status !== 'trialing'
+        ) {
+          return res.status(403).send({
+            error: 'account_hold',
+            message:
+              'Your account is temporarily on hold. You can contact jarod@staticbox.io to resolve this issue.',
           });
+        } else {
+          updateSite
+            .then((responseTwo) => {
+              return res.status(200).send(responseTwo);
+            })
+            .catch((errorTwo) => {
+              return res.status(300).send(errorTwo);
+            });
+        }
       } else {
         return res.status(403).send({
           error: 'permission_denied',
@@ -811,101 +881,98 @@ server.get(
   }
 );
 
-server.get(
-  ['/api/sites/:id/styles', '/api/sites/:id/styles/'],
-  (req, res) => {
-    const secret = req.headers.key;
-    if (secret === '') {
-      return res.status(404).send({
-        error: 'no_token',
-        message: 'Please provide an access token.',
-      });
-    }
-    let testAuthentication = client.query(
-      q.Let(
-        {
-          site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
-          userRef: q.Select(['data', 'user'], q.Var('site')),
-          siteRef: q.Ref(
-            q.Collection('sites'),
-            q.Select(['ref', 'id'], q.Var('site'))
-          ),
-          // userRef: q.Ref(q.Collection('users'), q.Var('user')),
-          identityRef: q.Identity(),
-        },
-        {
-          isAllowed: q.Equals(q.Var('siteRef'), q.Var('identityRef')),
-        }
-      ),
-      { secret }
-    );
-
-    let getStyles = client.query(
-      q.Map(
-        q.Paginate(q.Match(q.Index('all_styles'))),
-        q.Lambda(
-          'stylesRef',
-          q.Let(
-            {
-              styles: q.Get(q.Var('stylesRef')),
-              user: q.Select(['data', 'user'], q.Var('styles')),
-              site: q.Select(['data', 'site'], q.Var('styles')),
-            },
-            {
-              ref: q.Select(['ref'], q.Var('styles')),
-              data: q.Select(['data'], q.Var('styles')),
-            }
-          )
-        )
-      ),
-      { secret }
-    );
-
-    testAuthentication
-      .then((response) => {
-        if (response.isAllowed) {
-          getStyles
-            .then((responseTwo) => {
-              return res.status(200).send(responseTwo);
-            })
-            .catch((errorTwo) => {
-              return res.status(300).send(errorTwo);
-            });
-        } else {
-          return res.status(403).send({
-            error: 'permission_denied',
-            message: `You don't have permission to access this site's styles. Try generating an api key for the site ${req.params.id} at https://app.staticbox.io/sites/${req.params.id}/settings/api`,
-          });
-        }
-      })
-      .catch((error) => {
-        if (error.name === 'PermissionDenied') {
-          return res.status(403).send({
-            error: 'permission_denied',
-            message:
-              "You don't have permission to access this site's styles. If this is a mistake, please contact jarod@staticbox.io",
-            data: error,
-          });
-        } else if (error.name === 'NotFound') {
-          return res.status(404).send({
-            error: 'not_found',
-            message: `No site exists with the id ${req.params.id}.`,
-          });
-        } else if (error.name === 'Unauthorized') {
-          return res.status(404).send({
-            error: 'unauthorized',
-            message: `The token you provided is invalid.`,
-          });
-        } else {
-          return res.status(500).send({
-            error: 'server_error',
-            data: error,
-            message: `We encountered an unidentified error.`,
-          });
-        }
-      });
+server.get(['/api/sites/:id/styles', '/api/sites/:id/styles/'], (req, res) => {
+  const secret = req.headers.key;
+  if (secret === '') {
+    return res.status(404).send({
+      error: 'no_token',
+      message: 'Please provide an access token.',
+    });
   }
-);
+  let testAuthentication = client.query(
+    q.Let(
+      {
+        site: q.Get(q.Match(q.Index('site_by_id'), req.params.id)),
+        userRef: q.Select(['data', 'user'], q.Var('site')),
+        siteRef: q.Ref(
+          q.Collection('sites'),
+          q.Select(['ref', 'id'], q.Var('site'))
+        ),
+        // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+        identityRef: q.Identity(),
+      },
+      {
+        isAllowed: q.Equals(q.Var('siteRef'), q.Var('identityRef')),
+      }
+    ),
+    { secret }
+  );
+
+  let getStyles = client.query(
+    q.Map(
+      q.Paginate(q.Match(q.Index('all_styles'))),
+      q.Lambda(
+        'stylesRef',
+        q.Let(
+          {
+            styles: q.Get(q.Var('stylesRef')),
+            user: q.Select(['data', 'user'], q.Var('styles')),
+            site: q.Select(['data', 'site'], q.Var('styles')),
+          },
+          {
+            ref: q.Select(['ref'], q.Var('styles')),
+            data: q.Select(['data'], q.Var('styles')),
+          }
+        )
+      )
+    ),
+    { secret }
+  );
+
+  testAuthentication
+    .then((response) => {
+      if (response.isAllowed) {
+        getStyles
+          .then((responseTwo) => {
+            return res.status(200).send(responseTwo);
+          })
+          .catch((errorTwo) => {
+            return res.status(300).send(errorTwo);
+          });
+      } else {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message: `You don't have permission to access this site's styles. Try generating an api key for the site ${req.params.id} at https://app.staticbox.io/sites/${req.params.id}/settings/api`,
+        });
+      }
+    })
+    .catch((error) => {
+      if (error.name === 'PermissionDenied') {
+        return res.status(403).send({
+          error: 'permission_denied',
+          message:
+            "You don't have permission to access this site's styles. If this is a mistake, please contact jarod@staticbox.io",
+          data: error,
+        });
+      } else if (error.name === 'NotFound') {
+        return res.status(404).send({
+          error: 'not_found',
+          message: `No site exists with the id ${req.params.id}.`,
+        });
+      } else if (error.name === 'Unauthorized') {
+        return res.status(404).send({
+          error: 'unauthorized',
+          message: `The token you provided is invalid.`,
+        });
+      } else {
+        return res.status(500).send({
+          error: 'server_error',
+          data: error,
+          message: `We encountered an unidentified error.`,
+        });
+      }
+    });
+});
 
 // Export API function
 const api = functions.https.onRequest((request, response) => {
