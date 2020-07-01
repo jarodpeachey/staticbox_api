@@ -325,6 +325,19 @@ server.get(['/api/sites', '/api/sites/'], (req, res) => {
       message: 'Please provide an access token.',
     });
   }
+  let testAuthentication = client.query(
+    q.Let(
+      {
+        sites: q.Get(q.Var('sitesRef')),
+        user: q.Get(q.Select(['data', 'user'], q.Var('sites'))),
+      },
+      {
+        isAllowed: q.Or(q.Equals(q.Var('userRef'), q.Var('identityRef'))),
+        user: q.Var('user'),
+      }
+    ),
+    { secret }
+  );
   let getSites = client.query(
     q.Map(
       q.Paginate(q.Match(q.Index('all_sites'))),
@@ -334,10 +347,12 @@ server.get(['/api/sites', '/api/sites/'], (req, res) => {
           {
             sites: q.Get(q.Var('sitesRef')),
             user: q.Get(q.Select(['data', 'user'], q.Var('sites'))),
+            userRef: q.Select(['ref'], q.Var('user')),
           },
           {
-            user: q.Select(['ref'], q.Var('user')),
+            user: q.Get(q.Select(['ref'], q.Var('user'))),
             site: q.Var('sites'),
+            isAllowed: q.Or(q.Equals(q.Var('userRef'), q.Identity())),
           }
         )
       )
@@ -347,43 +362,57 @@ server.get(['/api/sites', '/api/sites/'], (req, res) => {
 
   getSites
     .then((response) => {
-      if (
-        response.user.data.status !== 'active' &&
-        response.user.data.status !== 'trialing'
-      ) {
-        return res.status(403).send({
-          error: 'account_hold',
-          message:
-            'Your account is temporarily on hold. You can contact jarod@staticbox.io to resolve this issue.',
-        });
+      if (response.data[0].isAllowed) {
+        if (
+          response &&
+          response.data &&
+          response.data.length > 0 &&
+          response.data[0].user.data.status !== 'active' &&
+          response &&
+          response.data &&
+          response.data.length > 0 &&
+          response.data[0].user.data.status !== 'trialing'
+        ) {
+          return res.status(403).send({
+            error: 'account_hold',
+            message:
+              'Your account is temporarily on hold. You can contact jarod@staticbox.io to resolve this issue.',
+          });
+        } else {
+          return res.status(200).send(response);
+        }
       } else {
-        return res.status(200).send(response);
-      }
-    })
-    .catch((error) => {
-      if (error.name === 'PermissionDenied') {
         return res.status(403).send({
           error: 'permission_denied',
           message:
-            "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
-        });
-      } else if (error.name === 'NotFound') {
-        return res.status(404).send({
-          error: 'not_found',
-          message: `No site exists with the id ${req.params.id}.`,
-        });
-      } else if (error.name === 'Unauthorized') {
-        return res.status(404).send({
-          error: 'unauthorized',
-          message: `The token you provided is invalid.`,
-        });
-      } else {
-        return res.status(500).send({
-          error: 'server_error',
-          data: error,
-          message: `We encountered an unidentified error.`,
+            "You don't have permission to access these sites. Try passing in a user-scope API key.\n\n If this is a mistake, please contact jarod@staticbox.io"
         });
       }
+    })
+    .catch((error) => {
+      return res.status(500).send({
+        error: 'server_error',
+        data: error,
+        // data2: JSON.stringify(error),
+        message: `We encountered an unidentified error.`,
+      });
+      // if (error.name === 'PermissionDenied') {
+      //   return res.status(403).send({
+      //     error: 'permission_denied',
+      //     message:
+      //       "You don't have permission to access this site. If this is a mistake, please contact jarod@staticbox.io",
+      //   });
+      // } else if (error.name === 'NotFound') {
+      //   return res.status(404).send({
+      //     error: 'not_found',
+      //     message: `No site exists with the id ${req.params.id}.`,
+      //   });
+      // } else if (error.name === 'Unauthorized') {
+      //   return res.status(404).send({
+      //     error: 'unauthorized',
+      //     message: `The token you provided is invalid.`,
+      //   });
+      // }
     });
 });
 
