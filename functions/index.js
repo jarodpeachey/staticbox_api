@@ -385,7 +385,7 @@ server.get(['/api/sites', '/api/sites/'], (req, res) => {
         return res.status(403).send({
           error: 'permission_denied',
           message:
-            "You don't have permission to access these sites. Try passing in a user-scope API key.\n\n If this is a mistake, please contact jarod@staticbox.io"
+            "You don't have permission to access these sites. Try passing in a user-scope API key.\n\n If this is a mistake, please contact jarod@staticbox.io",
         });
       }
     })
@@ -645,6 +645,7 @@ server.delete(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
           q.Select(['ref', 'id'], q.Var('site'))
         ),
         // userRef: q.Ref(q.Collection('users'), q.Var('user')),
+        user: q.Get(q.Select(['data', 'user'], q.Var('site'))),
         identityRef: q.Identity(),
       },
       {
@@ -652,6 +653,7 @@ server.delete(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
           q.Equals(q.Var('userRef'), q.Var('identityRef')),
           q.Equals(q.Var('siteRef'), q.Var('identityRef'))
         ),
+        user: q.Var('user'),
       }
     ),
     { secret }
@@ -671,13 +673,24 @@ server.delete(['/api/sites/:id', '/api/sites/:id/'], (req, res) => {
   testAuthentication
     .then((response) => {
       if (response.isAllowed) {
-        deleteSite
-          .then((responseTwo) => {
-            return res.status(200).send(responseTwo);
-          })
-          .catch((errorTwo) => {
-            return res.status(300).send(errorTwo);
+        if (
+          response.user.data.status !== 'active' &&
+          response.user.data.status !== 'trialing'
+        ) {
+          return res.status(403).send({
+            error: 'account_hold',
+            message:
+              'Your account is temporarily on hold. You can contact jarod@staticbox.io to resolve this issue.',
           });
+        } else {
+          deleteSite
+            .then((responseTwo) => {
+              return res.status(200).send(responseTwo);
+            })
+            .catch((errorTwo) => {
+              return res.status(300).send(errorTwo);
+            });
+        }
       } else {
         return res.status(403).send({
           error: 'permission_denied',
